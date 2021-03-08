@@ -141,6 +141,16 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
     );
   }
 
+  @override
+  Future<void> setPreferredResolution(int textureId, int width, int height) {
+    return _api.setPreferredResolution(
+      ResolutionMessage()
+        ..textureId = textureId
+        ..width = width
+        ..height = height,
+    );
+  }
+
   EventChannel _eventChannelFor(int textureId) {
     return EventChannel('flutter.io/videoPlayer/videoEvents$textureId');
   }

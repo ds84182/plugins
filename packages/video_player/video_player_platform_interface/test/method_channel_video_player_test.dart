@@ -20,6 +20,7 @@ class _ApiLogger implements TestHostVideoPlayerApi {
   VolumeMessage? volumeMessage;
   PlaybackSpeedMessage? playbackSpeedMessage;
   MixWithOthersMessage? mixWithOthersMessage;
+  ResolutionMessage? preferredResolutionMessage;
 
   @override
   TextureMessage create(CreateMessage arg) {
@@ -86,6 +87,12 @@ class _ApiLogger implements TestHostVideoPlayerApi {
   void setPlaybackSpeed(PlaybackSpeedMessage arg) {
     log.add('setPlaybackSpeed');
     playbackSpeedMessage = arg;
+  }
+
+  @override
+  void setPreferredResolution(ResolutionMessage arg) {
+    log.add('setPreferredResolution');
+    preferredResolutionMessage = arg;
   }
 }
 
@@ -304,6 +311,14 @@ void main() {
             VideoEvent(eventType: VideoEventType.bufferingStart),
             VideoEvent(eventType: VideoEventType.bufferingEnd),
           ]));
+    });
+
+    test('setPreferredResolution', () async {
+      await player.setPreferredResolution(1, 1920, 1080);
+      expect(log.log.last, 'setPreferredResolution');
+      expect(log.preferredResolutionMessage?.textureId, 1);
+      expect(log.preferredResolutionMessage?.width, 1920);
+      expect(log.preferredResolutionMessage?.height, 1080);
     });
   });
 }

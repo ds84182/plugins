@@ -21,6 +21,7 @@ abstract class TestHostVideoPlayerApi {
   void seekTo(PositionMessage arg);
   void pause(TextureMessage arg);
   void setMixWithOthers(MixWithOthersMessage arg);
+  void setPreferredResolution(ResolutionMessage arg);
   static void setup(TestHostVideoPlayerApi? api) {
     {
       const BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
@@ -188,6 +189,22 @@ abstract class TestHostVideoPlayerApi {
           final MixWithOthersMessage input =
               MixWithOthersMessage.decode(message!);
           api.setMixWithOthers(input);
+          return <Object?, Object?>{};
+        });
+      }
+    }
+    {
+      const BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.VideoPlayerApi.setPreferredResolution',
+          StandardMessageCodec());
+      if (api == null) {
+        channel.setMockMessageHandler(null);
+      } else {
+        channel.setMockMessageHandler((Object? message) async {
+          assert(message != null,
+              'Argument for dev.flutter.pigeon.VideoPlayerApi.setPreferredResolution was null. Expected ResolutionMessage.');
+          final ResolutionMessage input = ResolutionMessage.decode(message!);
+          api.setPreferredResolution(input);
           return <Object?, Object?>{};
         });
       }

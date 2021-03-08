@@ -120,6 +120,15 @@ abstract class VideoPlayerPlatform {
     throw UnimplementedError('setMixWithOthers() has not been implemented.');
   }
 
+  /// Sets the preferred resolution of the video.
+  ///
+  /// If [width] and [height] are zero, the preferred resolution hints should
+  /// return to their defaults.
+  Future<void> setPreferredResolution(int textureId, int width, int height) {
+    throw UnimplementedError(
+        'setPreferredResolution() has not been implemented.');
+  }
+
   // This method makes sure that VideoPlayer isn't implemented with `implements`.
   //
   // See class doc for more details on why implementing this class is forbidden.
