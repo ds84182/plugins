@@ -243,6 +243,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   Completer<void>? _creatingCompleter;
   StreamSubscription<dynamic>? _eventSubscription;
   late _VideoAppLifeCycleObserver _lifeCycleObserver;
+  Size? _preferredResolution;
 
   /// The id of a texture that hasn't been initialized.
   @visibleForTesting
@@ -310,6 +311,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           _applyLooping();
           _applyVolume();
           _applyPlayPause();
+          _applyPreferredResolution();
           break;
         case VideoEventType.completed:
           value = value.copyWith(isPlaying: false, position: value.duration);
@@ -520,6 +522,47 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
     value = value.copyWith(playbackSpeed: speed);
     await _applyPlaybackSpeed();
+  }
+
+  /// Sets the preferred resolution of [this].
+  ///
+  /// Setting the preferred resolution is useful when using adaptive video
+  /// formats, such as [VideoFormat.dash] or [VideoFormat.hls]. The platform's
+  /// resolution selection algorithm depends on various factors, like availabile
+  /// resolutions, device capabilities, network conditions, along with viewport
+  /// size. Because of this, the resolution may be utilized as a hint for
+  /// streaming quality, instead of a requirement.
+  ///
+  /// [physicalSize] indicates the preferred video size in physical pixels. For
+  /// example, to prefer 1080p playback, set the preferred resolution to
+  /// `Size(1920, 1080)`.
+  ///
+  /// By default the preferred resolution is determined by the device
+  /// capabilities. To return to the platform-provided preferred resolution,
+  /// pass null instead of a specific size.
+  ///
+  /// The preferred resolution is handled differently for each platform:
+  /// * On Android and iOS, this updates the respective platform's viewport size
+  ///   hints.
+  ///   On iOS, this uses https://developer.apple.com/documentation/avfoundation/avplayeritem/2867324-preferredmaximumresolution
+  ///   On Android, this uses https://exoplayer.dev/doc/reference/com/google/android/exoplayer2/trackselection/DefaultTrackSelector.ParametersBuilder.html#setViewportSize(int,int,boolean)
+  /// * On web, the preferred resolution is ignored. Instead the size of the
+  ///   player is utilized.
+  Future<void> setPreferredResolution(Size? physicalSize) async {
+    _preferredResolution = physicalSize;
+    await _applyPreferredResolution();
+  }
+
+  Future<void> _applyPreferredResolution() async {
+    if (!value.isInitialized || _isDisposed) {
+      return;
+    }
+    final physicalSize = _preferredResolution;
+    await _videoPlayerPlatform.setPreferredResolution(
+      _textureId,
+      physicalSize?.width.ceil() ?? 0,
+      physicalSize?.height.ceil() ?? 0,
+    );
   }
 
   /// The closed caption based on the current [position] in the video.

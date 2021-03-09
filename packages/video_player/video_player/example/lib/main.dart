@@ -23,7 +23,7 @@ class _App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         key: const ValueKey<String>('home_page'),
         appBar: AppBar(
@@ -49,6 +49,7 @@ class _App extends StatelessWidget {
                 icon: Icon(Icons.cloud),
                 text: "Remote",
               ),
+              Tab(icon: Icon(Icons.cloud), text: "Remote Adaptive"),
               Tab(icon: Icon(Icons.insert_drive_file), text: "Asset"),
               Tab(icon: Icon(Icons.list), text: "List example"),
             ],
@@ -57,6 +58,7 @@ class _App extends StatelessWidget {
         body: TabBarView(
           children: <Widget>[
             _BumbleBeeRemoteVideo(),
+            _BitmovinRemoteAdaptiveVideo(),
             _ButterFlyAssetVideo(),
             _ButterFlyAssetVideoInList(),
           ],
@@ -257,6 +259,98 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BitmovinRemoteAdaptiveVideo extends StatefulWidget {
+  @override
+  _BitmovinRemoteAdaptiveVideoState createState() =>
+      _BitmovinRemoteAdaptiveVideoState();
+}
+
+class _BitmovinRemoteAdaptiveVideoState
+    extends State<_BitmovinRemoteAdaptiveVideo> {
+  late VideoPlayerController _controller;
+  Size? _viewportSize;
+
+  static const _videoSizes = <Size>[
+    Size(1920.0, 1080.0),
+    Size(1280.0, 720.0),
+    Size(960.0, 540.0),
+    Size(640.0, 360.0),
+    Size(480.0, 270.0),
+    Size(320.0, 180.0),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.network(
+      'https://bitmovin-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8',
+      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+      formatHint: VideoFormat.hls,
+    );
+
+    _controller.addListener(() {
+      setState(() {});
+    });
+    _controller.setLooping(true);
+    _controller.initialize();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onViewportSizeChanged(Size? size) {
+    setState(() {
+      _viewportSize = size;
+    });
+    _controller.setPreferredResolution(size == null || size.isEmpty ? null : size);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        children: <Widget>[
+          Padding(padding: const EdgeInsets.only(top: 20.0)),
+          const Text('With HLS'),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: AspectRatio(
+              aspectRatio: _controller.value.aspectRatio,
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                children: <Widget>[
+                  VideoPlayer(_controller),
+                  ClosedCaption(text: _controller.value.caption.text),
+                  _ControlsOverlay(controller: _controller),
+                  VideoProgressIndicator(_controller, allowScrubbing: true),
+                ],
+              ),
+            ),
+          ),
+          DropdownButton<Size>(
+            value: _viewportSize ?? Size.zero,
+            onChanged: _onViewportSizeChanged,
+            items: [
+              DropdownMenuItem(
+                value: Size.zero,
+                child: Text('Unset'),
+              ),
+              for (var size in _videoSizes)
+                DropdownMenuItem(
+                  value: size,
+                  child: Text('${size.height.toInt()}p'),
+                ),
+            ],
           ),
         ],
       ),

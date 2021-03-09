@@ -27,6 +27,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.view.TextureRegistry;
 import java.util.Arrays;
@@ -55,6 +56,10 @@ final class VideoPlayer {
 
   private final VideoPlayerOptions options;
 
+  private final DefaultTrackSelector trackSelector;
+
+  private final Context context;
+
   VideoPlayer(
       Context context,
       EventChannel eventChannel,
@@ -65,8 +70,11 @@ final class VideoPlayer {
     this.eventChannel = eventChannel;
     this.textureEntry = textureEntry;
     this.options = options;
+    this.context = context;
 
-    exoPlayer = new SimpleExoPlayer.Builder(context).build();
+    trackSelector = new DefaultTrackSelector(context);
+
+    exoPlayer = new SimpleExoPlayer.Builder(context).setTrackSelector(trackSelector).build();
 
     Uri uri = Uri.parse(dataSource);
 
@@ -252,6 +260,20 @@ final class VideoPlayer {
 
   void seekTo(int location) {
     exoPlayer.seekTo(location);
+  }
+
+  void setPreferredResolution(int width, int height) {
+    if (width == 0 && height == 0) {
+      trackSelector.setParameters(
+        trackSelector.buildUponParameters()
+          .setViewportSizeToPhysicalDisplaySize(context, true)
+      );
+    } else {
+      trackSelector.setParameters(
+        trackSelector.buildUponParameters()
+          .setViewportSize(width, height, true)
+      );
+    }
   }
 
   long getPosition() {

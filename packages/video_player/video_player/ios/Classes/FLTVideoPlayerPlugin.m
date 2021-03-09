@@ -383,6 +383,10 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   _player.rate = speed;
 }
 
+- (void)setPreferredResolution:(CGSize)size {
+  _player.currentItem.preferredMaximumResolution = size;
+}
+
 - (CVPixelBufferRef)copyPixelBuffer {
   CMTime outputItemTime = [_videoOutput itemTimeForHostTime:CACurrentMediaTime()];
   if ([_videoOutput hasNewPixelBufferForItemTime:outputItemTime]) {
@@ -598,6 +602,11 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   } else {
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
   }
+}
+
+- (void)setPreferredResolution:(FLTResolutionMessage*)input error:(FlutterError**)error {
+  FLTVideoPlayer* player = _players[input.textureId];
+  [player setPreferredResolution:CGSizeMake((double)[input.width intValue], (double)[input.height intValue])];
 }
 
 @end
